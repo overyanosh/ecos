@@ -1,5 +1,4 @@
 # ---- ecOS bootc image ----
-# Base: AlmaLinux 9 bootc (corrigé)
 FROM quay.io/almalinuxorg/almalinux-bootc:9
 
 LABEL org.opencontainers.image.title="ecOS"
@@ -8,20 +7,41 @@ LABEL org.opencontainers.image.source="https://github.com/overyanosh/ecOS"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 
 # ============================================================
-# 1. PACKAGES — Virtualisation + GPU passthrough + RAID + réseau
+# 1. ENABLE REPOSITORIES (AppStream pour les paquets utilitaires)
+# ============================================================
+RUN dnf config-manager --set-enabled crb 2>/dev/null || true
+
+# ============================================================
+# 2. PACKAGES — Virtualisation + GPU passthrough + RAID + réseau
 # ============================================================
 RUN dnf -y update && dnf -y install \
     qemu-kvm \
     qemu-img \
+    qemu-common \
     libvirt \
+    libvirt-daemon \
+    libvirt-daemon-config-network \
+    libvirt-daemon-config-nwfilter \
+    libvirt-daemon-driver-qemu \
+    libvirt-daemon-driver-storage-core \
+    libvirt-daemon-driver-storage-disk \
+    libvirt-daemon-driver-storage-logical \
+    libvirt-daemon-driver-storage-filesystem \
+    libvirt-daemon-driver-storage-iscsi \
     libvirt-client \
     virt-install \
-    virt-manager-cli \
-    genisoimage \
+    virt-xml \
+    virt-viewer \
+    spice-server \
+    spice-protocol \
+    virtio-win \
     bridge-utils \
     vlan \
     iptables-nft \
     iproute \
+    iputils \
+    tcpdump \
+    net-tools \
     mdadm \
     lvm2 \
     nvme-cli \
@@ -32,8 +52,10 @@ RUN dnf -y update && dnf -y install \
     tuned-profiles-cpu-partitioning \
     lm_sensors \
     dmidecode \
+    edk2-aarch64 \
     edk2-ovmf \
     swtpm \
+    swtpm-tools \
     wget \
     curl \
     rsync \
@@ -42,23 +64,36 @@ RUN dnf -y update && dnf -y install \
     bootc \
     skopeo \
     ostree \
+    rpm-ostree \
     hostname \
     bash-completion \
-    && dnf clean all
+    procps-ng \
+    sysstat \
+    iotop \
+    htop \
+    jq \
+    tree \
+    file \
+    unzip \
+    zip \
+    tar \
+    gzip \
+    xz \
+    bzip2 \
+    && dnf -y clean all \
+    && rm -rf /var/cache/dnf/*
 
 # ============================================================
-# 2. KERNEL & IOMMU CONFIGURATION
+# 3. KERNEL & IOMMU CONFIGURATION
 # ============================================================
 
-# Dracut: charger VFIO tôt dans l'initramfs
 COPY files/etc/dracut.conf.d/vfio.conf /etc/dracut.conf.d/vfio.conf
 
-# -- VFIO module config
 COPY files/etc/modprobe.d/vfio.conf /etc/modprobe.d/vfio.conf
 COPY files/etc/modprobe.d/blacklist.conf /etc/modprobe.d/blacklist.conf
 
 # ============================================================
-# 3. SYSTEMD SERVICES — Immutabilité & protection USB
+# 4. SYSTEMD SERVICES — Immutabilité & protection USB
 # ============================================================
 
 COPY files/etc/systemd/system/ecos-immutable.service \
@@ -76,21 +111,21 @@ RUN systemctl enable ecos-immutable.service && \
     systemctl enable ecos-firstboot.service
 
 # ============================================================
-# 4. KERNEL TUNING — Virtualisation gaming
+# 5. KERNEL TUNING — Virtualisation gaming
 # ============================================================
 
 COPY files/etc/sysctl.d/ecos-vm.conf /etc/sysctl.d/ecos-vm.conf
 RUN sysctl --system || true
 
 # ============================================================
-# 5. TUNED PROFILE — ecOS-gaming
+# 6. TUNED PROFILE — ecOS-gaming
 # ============================================================
 
 COPY files/etc/tuned/ecos-gaming/tuned.conf \
      /etc/tuned/ecos-gaming/tuned.conf
 
 # ============================================================
-# 6. ECOS BINAIRES & SCRIPTS
+# 7. ECOS BINAIRES & SCRIPTS
 # ============================================================
 
 COPY files/usr/local/bin/ecos-firstboot.sh /usr/local/bin/ecos-firstboot.sh
@@ -101,33 +136,33 @@ COPY files/usr/sbin/ecos-update-checker /usr/sbin/ecos-update-checker
 RUN chmod +x /usr/local/bin/ecos-*.sh /usr/sbin/ecos-update-checker
 
 # ============================================================
-# 7. DISABLE COCKPIT (si présent dans la base)
+# 8. DISABLE COCKPIT (si présent dans la base)
 # ============================================================
 
 RUN dnf -y remove cockpit* 2>/dev/null || true && \
     systemctl mask cockpit.socket cockpit.service 2>/dev/null || true
 
 # ============================================================
-# 8. ENABLE SERVICES DE BASE
+# 9. ENABLE SERVICES DE BASE
 # ============================================================
 
 RUN systemctl enable libvirtd && \
     systemctl enable virtlogd && \
+    systemctl enable libvirt-guests 2>/dev/null || true && \
     systemctl enable tuned && \
     systemctl enable NetworkManager
 
 # ============================================================
-# 9. USER — root locked, admin user créé au firstboot
+# 10. USER — root locked, admin user créé au firstboot
 # ============================================================
 
 RUN passwd -l root
 
 # ============================================================
-# 10. bootc config — Update policy: distribution-controlled
+# 11. bootc config — Update policy: distribution-controlled
 # ============================================================
 
 COPY files/etc/bootc/ /etc/bootc/
 
-# ============================================================
-# FIN
-# ============================================================
+# Final
+USER root
