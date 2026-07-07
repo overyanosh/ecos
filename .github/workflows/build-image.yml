@@ -1,4 +1,4 @@
-name: Build ecOS Image
+name: Build ecos Image
 
 on:
   push:
@@ -28,6 +28,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y podman
 
+      # ====================================================
+      # PHASE 1: Build & Push container image
+      # ====================================================
       - name: Build container image
         run: |
           podman build -t ecos:latest -f container/Containerfile .
@@ -43,22 +46,49 @@ jobs:
           podman tag ecos:latest "$IMAGE_URL"
           podman push "$IMAGE_URL"
 
-      - name: Build bootable disk image
+      # ====================================================
+      # PHASE 2: Build bootable disk image with bootc-image-builder
+      # ====================================================
+      - name: Pull bootc-image-builder
         run: |
-          sudo apt-get install -y bootc-image-builder || true
-          sudo bootc-image-builder \
-            --type disk \
-            --output ./output/ecos-x86_64.raw \
-            --arch x86_64 \
-            "ghcr.io/overyanosh/ecos:latest" || \
-            echo "[WARN] bootc-image-builder not available or failed"
+          podman pull quay.io/centos-bootc/bootc-image-builder:latest
 
-      - name: Compress image
+      - name: Pull ecos image from GHCR
         run: |
-          if [[ -f ./output/ecos-x86_64.raw ]]; then
+          podman pull ghcr.io/overyanosh/ecos:latest
+
+      - name: Create auth.json for bootc-image-builder
+        run: |
+          mkdir -p ./bib-work
+          echo "${{ secrets.GHCR_PAT }}" | podman login ghcr.io \
+            -u overyanosh --password-stdin \
+            --authfile ./bib-work/auth.json
+          # S'assurer que le fichier est lisible par le container
+          chmod 644 ./bib-work/auth.json
+
+      - name: Build bootable disk image (RAW)
+        run: |
+          mkdir -p ./output
+          sudo podman run --rm --privileged \
+            --security-opt label=type:unconfined_t \
+            -v /var/lib/containers/storage:/var/lib/containers/storage \
+            -v $(pwd)/output:/output \
+            -v $(pwd)/bib-work/auth.json:/run/containers/0/auth.json \
+            quay.io/centos-bootc/bootc-image-builder:latest \
+            ghcr.io/overyanosh/ecos:latest \
+            --type raw \
+            --rootfs xfs \
+            --chown 1001:127 \
+            --verbose
+
+      - name: Compress disk image
+        run: |
+          if [[ -f ./output/disk.raw ]]; then
+            mv ./output/disk.raw ./output/ecos-x86_64.raw
             xz -v -T0 ./output/ecos-x86_64.raw
           else
-            echo "[INFO] No disk image to compress"
+            echo "[WARN] No disk image found in ./output/"
+            ls -la ./output/ || true
           fi
 
       - name: Upload artifact
