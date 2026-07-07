@@ -78,6 +78,10 @@ RUN dnf -y install \
     bzip2 \
     openssh-server \
     openssh-clients \
+    iscsi-initiator-utils \
+    isns-utils \
+    targetcli \
+    device-mapper-multipath \
     && dnf -y clean all \
     && rm -rf /var/cache/dnf/*
 
@@ -86,6 +90,11 @@ RUN dnf -y install \
 # ============================================================
 RUN mkdir -p /etc/ssh/sshd_config.d
 COPY files/etc/ssh/sshd_config.d/ecos.conf /etc/ssh/sshd_config.d/ecos.conf
+
+# ============================================================
+# 2c. iSCSI CONFIGURATION
+# ============================================================
+COPY files/etc/iscsi/iscsid.conf /etc/iscsi/iscsid.conf
 
 # ============================================================
 # 3. KERNEL & IOMMU CONFIGURATION
@@ -154,7 +163,10 @@ RUN systemctl enable libvirtd && \
     systemctl enable libvirt-guests 2>/dev/null || true && \
     systemctl enable tuned && \
     systemctl enable NetworkManager && \
-    systemctl enable sshd
+    systemctl enable sshd && \
+    systemctl enable iscsid && \
+    systemctl enable iscsi && \
+    systemctl enable iscsiuio 2>/dev/null || true
 
 # ============================================================
 # 10. USER — root locked
