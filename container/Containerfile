@@ -1,6 +1,6 @@
 # ---- ecOS bootc image ----
-# Base: AlmaLinux 9 bootc
-FROM quay.io/almalinuxorg/9-bootc:latest
+# Base: AlmaLinux 9 bootc (corrigé)
+FROM quay.io/almalinuxorg/almalinux-bootc:9
 
 LABEL org.opencontainers.image.title="ecOS"
 LABEL org.opencontainers.image.description="Gaming-focused immutable virtualization host"
@@ -42,14 +42,13 @@ RUN dnf -y update && dnf -y install \
     bootc \
     skopeo \
     ostree \
+    hostname \
+    bash-completion \
     && dnf clean all
 
 # ============================================================
 # 2. KERNEL & IOMMU CONFIGURATION
 # ============================================================
-
-# -- Kernel command line via grub bls (bootc gère grub automatiquement,
-#    mais on force certains params via rpm-ostree kargs dans un script firstboot)
 
 # Dracut: charger VFIO tôt dans l'initramfs
 COPY files/etc/dracut.conf.d/vfio.conf /etc/dracut.conf.d/vfio.conf
@@ -68,10 +67,13 @@ COPY files/etc/systemd/system/ecos-tmpfs-logs.service \
      /etc/systemd/system/ecos-tmpfs-logs.service
 COPY files/etc/systemd/system/ecos-power-profile.service \
      /etc/systemd/system/ecos-power-profile.service
+COPY files/etc/systemd/system/ecos-firstboot.service \
+     /etc/systemd/system/ecos-firstboot.service
 
 RUN systemctl enable ecos-immutable.service && \
     systemctl enable ecos-tmpfs-logs.service && \
-    systemctl enable ecos-power-profile.service
+    systemctl enable ecos-power-profile.service && \
+    systemctl enable ecos-firstboot.service
 
 # ============================================================
 # 4. KERNEL TUNING — Virtualisation gaming
@@ -86,7 +88,6 @@ RUN sysctl --system || true
 
 COPY files/etc/tuned/ecos-gaming/tuned.conf \
      /etc/tuned/ecos-gaming/tuned.conf
-RUN tuned-adm profile ecos-gaming || true
 
 # ============================================================
 # 6. ECOS BINAIRES & SCRIPTS
@@ -116,24 +117,16 @@ RUN systemctl enable libvirtd && \
     systemctl enable NetworkManager
 
 # ============================================================
-# 9. FIRSTBOOT — Trigger via systemd
+# 9. USER — root locked, admin user créé au firstboot
 # ============================================================
 
-COPY files/etc/systemd/system/ecos-firstboot.service \
-     /etc/systemd/system/ecos-firstboot.service
-RUN systemctl enable ecos-firstboot.service
+RUN passwd -l root
 
 # ============================================================
 # 10. bootc config — Update policy: distribution-controlled
 # ============================================================
 
 COPY files/etc/bootc/ /etc/bootc/
-
-# ============================================================
-# 11. USERS — root locked, admin user created at firstboot
-# ============================================================
-
-RUN passwd -l root
 
 # ============================================================
 # FIN
