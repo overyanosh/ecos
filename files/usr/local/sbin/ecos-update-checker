@@ -1,0 +1,70 @@
+#!/bin/bash
+set -euo pipefail
+
+# === ecOS Update Checker ===
+# Vérifie si une mise à jour bootc est disponible
+# Les updates sont pilotées par la distribution — ce script ne fait que CHECK
+# Il ne déclenche PAS l'update (contrairement à bootc upgrade)
+
+ECOS_STATE="/var/lib/ecos"
+UPDATE_FLAG="$ECOS_STATE/.update-available"
+LAST_CHECK="$ECOS_STATE/.last-update-check"
+mkdir -p "$ECOS_STATE"
+
+# --- Éviter de checker trop souvent (max 1x par heure) ---
+if [[ -f "$LAST_CHECK" ]]; then
+    LAST_TS=$(stat -c %Y "$LAST_CHECK" 2>/dev/null || echo 0)
+    NOW_TS=$(date +%s)
+    DIFF=$((NOW_TS - LAST_TS))
+    if [[ "$DIFF" -lt 3600 ]]; then
+        # Trop tôt pour rechecker
+        exit 0
+    fi
+fi
+
+touch "$LAST_CHECK"
+
+# --- Vérifier si une nouvelle image est disponible ---
+# bootc status retourne l'image courante et l'image cible
+STATUS_OUTPUT=$(bootc status 2>/dev/null || true)
+
+if [[ -z "$STATUS_OUTPUT" ]]; then
+    # bootc pas disponible ou pas encore booté en mode image
+    exit 0
+fi
+
+# Comparer l'image en cours et l'image disponible
+CURRENT_IMAGE=$(echo "$STATUS_OUTPUT" | grep -oP '^\s*image:\s*\K.*' | head -1 | tr -d ' ')
+TARGET_IMAGE=$(echo "$STATUS_OUTPUT" | grep -oP '^\s*target:\s*\K.*' | head -1 | tr -d ' ')
+
+# Alternative: vérifier via ostree si bootc status ne donne pas assez d'info
+if [[ -z "$CURRENT_IMAGE" || -z "$TARGET_IMAGE" ]]; then
+    # Fallback: ostree remote refs
+    OSTREE_STATUS=$(ostree admin status 2>/dev/null || true)
+    
+    # Chercher un checksum différent entre booted et pending
+    BOOTED=$(echo "$OSTREE_STATUS" | grep -oP '^\*?\s*\K[0-9a-f]{64}' | head -1)
+    PENDING=$(echo "$OSTREE_STATUS" | grep -oP 'pending\s*\K[0-9a-f]{64}' | head -1)
+    
+    if [[ -n "$PENDING" && "$BOOTED" != "$PENDING" ]]; then
+        echo "[ecOS] Update available (ostree pending commit: ${PENDING:0:12})"
+        touch "$UPDATE_FLAG"
+        echo "{\"update_available\": true, \"pending_commit\": \"${PENDING:0:12}\"}" \
+             > "$ECOS_STATE/update-info.json"
+    else
+        rm -f "$UPDATE_FLAG"
+    fi
+    exit 0
+fi
+
+# --- bootc status comparison ---
+if [[ "$CURRENT_IMAGE" != "$TARGET_IMAGE" && -n "$TARGET_IMAGE" ]]; then
+    echo "[ecOS] Update available: $TARGET_IMAGE"
+    echo "[ecOS] Current image:   $CURRENT_IMAGE"
+    touch "$UPDATE_FLAG"
+    echo "{\"update_available\": true, \"current\": \"$CURRENT_IMAGE\", \"target\": \"$TARGET_IMAGE\"}" \
+         > "$ECOS_STATE/update-info.json"
+else
+    rm -f "$UPDATE_FLAG" 2>/dev/null || true
+    echo "[ecOS] System is up to date."
+fi
