@@ -52,4 +52,45 @@ echo "[ecos] First boot configuration complete!"
 # --- 5. Reboot pour appliquer les kargs ---
 echo "[ecos] Rebooting in 5 seconds to apply kernel parameters..."
 sleep 5
+
+# --- 6. Créer l'utilisateur admin ---
+echo "[ecOS] Creating admin user..."
+
+ADMIN_USER="ecos-admin"
+
+# Créer l'utilisateur avec home et shell
+useradd -m -s /bin/bash -G wheel,libvirt "$ADMIN_USER" || true
+
+# Générer une clé SSH si aucune n'est fournie
+# (en production, on injecterait la clé via cloud-init ou un fichier)
+mkdir -p "/home/$ADMIN_USER/.ssh"
+chmod 700 "/home/$ADMIN_USER/.ssh"
+
+# Si une clé publique est présente sur une partition de config (USB secondaire)
+# on la copie, sinon on génère une paire de clés et on affiche la publique
+if [[ -f /run/media/*/ecos-ssh.pub ]]; then
+    cp /run/media/*/ecos-ssh.pub "/home/$ADMIN_USER/.ssh/authorized_keys"
+    echo "[ecOS] SSH public key found on USB config partition"
+else
+    ssh-keygen -t ed25519 -f "/home/$ADMIN_USER/.ssh/id_ed25519" -N "" -C "ecos-admin"
+    cp "/home/$ADMIN_USER/.ssh/id_ed25519.pub" "/home/$ADMIN_USER/.ssh/authorized_keys"
+    echo ""
+    echo "[ecOS] No SSH key found on config partition."
+    echo "[ecOS] Generated key pair for $ADMIN_USER."
+    echo "[ecOS] Public key:"
+    cat "/home/$ADMIN_USER/.ssh/id_ed25519.pub"
+    echo ""
+    echo "[ecOS] Retrieve this key to connect via SSH!"
+fi
+
+chmod 600 "/home/$ADMIN_USER/.ssh/authorized_keys"
+chown -R "$ADMIN_USER:$ADMIN_USER" "/home/$ADMIN_USER/.ssh"
+
+# Activer l'utilisateur dans AllowUsers
+sed -i "s/^#AllowUsers.*/AllowUsers $ADMIN_USER/" /etc/ssh/sshd_config.d/ecos.conf
+
+echo "[ecOS] Admin user '$ADMIN_USER' created."
+sleep 5
+
+
 reboot

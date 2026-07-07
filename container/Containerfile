@@ -76,8 +76,16 @@ RUN dnf -y install \
     gzip \
     xz \
     bzip2 \
+    openssh-server \
+    openssh-clients \
     && dnf -y clean all \
     && rm -rf /var/cache/dnf/*
+
+# ============================================================
+# 2b. SSH CONFIGURATION
+# ============================================================
+RUN mkdir -p /etc/ssh/sshd_config.d
+COPY files/etc/ssh/sshd_config.d/ecos.conf /etc/ssh/sshd_config.d/ecos.conf
 
 # ============================================================
 # 3. KERNEL & IOMMU CONFIGURATION
@@ -145,7 +153,8 @@ RUN systemctl enable libvirtd && \
     systemctl enable virtlogd && \
     systemctl enable libvirt-guests 2>/dev/null || true && \
     systemctl enable tuned && \
-    systemctl enable NetworkManager
+    systemctl enable NetworkManager && \
+    systemctl enable sshd
 
 # ============================================================
 # 10. USER — root locked
