@@ -1,1 +1,1 @@
-# ecos
+# ecos  [![Build ecos Image](https://github.com/overyanosh/ecos/actions/workflows/build-image.yml/badge.svg?branch=main)](https://github.com/overyanosh/ecos/actions/workflows/build-image.yml)
