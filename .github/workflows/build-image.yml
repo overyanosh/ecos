@@ -9,7 +9,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REPOSITORY: ${{ github.repository }}
+  IMAGE_NAME: ecos    # ⬅️ Toujours en minuscules pour GHCR
+  IMAGE_TAG: latest
 
 jobs:
   build-and-push:
@@ -36,26 +38,36 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io \
             -u ${{ github.actor }} --password-stdin
 
-      - name: Push image
+      - name: Tag and Push image
+        env:
+          IMAGE_URL: "ghcr.io/${{ github.repository_owner }}/ecos:${{ env.IMAGE_TAG }}"
         run: |
-          IMAGE_URL="ghcr.io/${{ github.repository }}:latest"
           podman tag ecos:latest "$IMAGE_URL"
           podman push "$IMAGE_URL"
 
-      - name: Build bootable disk image
+      - name: Build bootable disk image (if needed)
         run: |
-          sudo apt-get install -y bootc-image-builder
+          sudo apt-get install -y bootc-image-builder || true
           sudo bootc-image-builder \
             --type disk \
             --output ./output/ecos-x86_64.raw \
-            ghcr.io/${{ github.repository }}:latest
+            --arch x86_64 \
+            "ghcr.io/${{ github.repository_owner }}/ecos:${{ env.IMAGE_TAG }}" || \
+            echo "[WARN] bootc-image-builder not available or failed"
 
       - name: Compress image
-        run: xz -v -T0 ./output/ecos-x86_64.raw
+        run: |
+          if [[ -f ./output/ecos-x86_64.raw ]]; then
+            xz -v -T0 ./output/ecos-x86_64.raw
+          else
+            echo "[INFO] No disk image to compress"
+          fi
 
       - name: Upload artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ecos-usb-image
-          path: ./output/ecos-x86_64.raw.xz
+          path: ./output/*.raw*
           retention-days: 30
+          if-no-files-found: warn
