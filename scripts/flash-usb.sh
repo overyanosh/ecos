@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# === ecOS — Flash image to USB drive ===
+# === ecos — Flash image to USB drive ===
 
 IMAGE="${1:?Usage: $0 <image.raw.xz>}"
 DEVICE="${2:-auto}"
 
 echo "============================================"
-echo "  ecOS — USB Flasher"
+echo "  ecos — USB Flasher"
 echo "============================================"
 echo ""
 
@@ -51,10 +51,10 @@ fi
 sync
 echo ""
 echo "============================================"
-echo "  ✅ ecOS flashed to $DEV_PATH!"
+echo "  ✅ ecos flashed to $DEV_PATH!"
 echo "============================================"
 echo ""
 echo "Partitions créées:"
 lsblk -o NAME,SIZE,TYPE,FSTYPE "$DEV_PATH"
 echo ""
-echo "👉 Boot sur la clé USB, ecOS lancera le firstboot automatiquement."
+echo "👉 Boot sur la clé USB, ecos lancera le firstboot automatiquement."

@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# === ecOS GPU Passthrough Preparation ===
-echo "[ecOS] Scanning for GPUs..."
+# === ecos GPU Passthrough Preparation ===
+echo "[ecos] Scanning for GPUs..."
 
 GPUS_FILE="/var/lib/ecos/gpus.txt"
 mkdir -p "$(dirname "$GPUS_FILE")"
@@ -10,7 +10,7 @@ mkdir -p "$(dirname "$GPUS_FILE")"
 # Lister tous les GPU VGA et 3D controllers
 mapfile -t GPUS < <(lspci -nn | grep -iE '(VGA|3D controller|Display controller)')
 
-echo "[ecOS] Found ${#GPUS[@]} GPU device(s):"
+echo "[ecos] Found ${#GPUS[@]} GPU device(s):"
 for i in "${!GPUS[@]}"; do
     echo "  [$i] ${GPUS[$i]}"
 done
@@ -19,13 +19,13 @@ done
 IGPU_EXISTS=false
 if lspci | grep -qiE 'VGA.*Intel|VGA.*AMD.*Radeon.*(integrated|APU)'; then
     IGPU_EXISTS=true
-    echo "[ecOS] Integrated GPU (iGPU) detected — keeping it for host display"
+    echo "[ecos] Integrated GPU (iGPU) detected — keeping it for host display"
 fi
 
 # Si pas d'iGPU, libérer le 1er GPU discret pour l'hôte console frame buffer
 # et passer TOUS les GPU en VFIO pour les VMs
 echo ""
-echo "[ecOS] GPU strategy:"
+echo "[ecos] GPU strategy:"
 if [[ "$IGPU_EXISTS" == "true" ]]; then
     echo "  → iGPU for host console"
     echo "  → All discrete GPUs → VFIO passthrough"
@@ -56,7 +56,7 @@ done
 UNIQUE_IDS=($(printf '%s\n' "${GPU_IDS[@]}" | sort -u))
 
 echo ""
-echo "[ecOS] GPU Vendor:Device IDs for VFIO:"
+echo "[ecos] GPU Vendor:Device IDs for VFIO:"
 for id in "${UNIQUE_IDS[@]}"; do
     echo "  → $id"
 done
@@ -71,7 +71,7 @@ echo "softdep amdgpu pre: vfio-pci" >> "$VFIO_CONF"
 
 # Sauvegarder les infos GPU pour la web UI (phase 2)
 {
-    echo "# ecOS GPU inventory"
+    echo "# ecos GPU inventory"
     echo "# Generated: $(date -Iseconds)"
     echo "# iGPU present: $IGPU_EXISTS"
     echo "#"
@@ -81,10 +81,10 @@ echo "softdep amdgpu pre: vfio-pci" >> "$VFIO_CONF"
 } > "$GPUS_FILE"
 
 echo ""
-echo "[ecOS] GPU preparation complete. VFIO config written to $VFIO_CONF"
-echo "[ecOS] Changes will take effect after reboot."
+echo "[ecos] GPU preparation complete. VFIO config written to $VFIO_CONF"
+echo "[ecos] Changes will take effect after reboot."
 
 # Régénérer l'initramfs avec dracut
-echo "[ecOS] Regenerating initramfs..."
+echo "[ecos] Regenerating initramfs..."
 dracut --force --regenerate-all 2>/dev/null || \
-    echo "[ecOS] WARNING: dracut regeneration failed — will use bootc-managed initramfs"
+    echo "[ecos] WARNING: dracut regeneration failed — will use bootc-managed initramfs"

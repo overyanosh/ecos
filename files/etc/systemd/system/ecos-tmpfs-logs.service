@@ -1,5 +1,5 @@
 [Unit]
-Description=ecOS — Redirect logs and temp to tmpfs (USB preservation)
+Description=ecos — Redirect logs and temp to tmpfs (USB preservation)
 After=ecos-immutable.service
 
 [Service]

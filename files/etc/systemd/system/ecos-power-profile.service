@@ -1,5 +1,5 @@
 [Unit]
-Description=ecOS — Apply gaming power profile
+Description=ecos — Apply gaming power profile
 After=tuned.service
 
 [Service]

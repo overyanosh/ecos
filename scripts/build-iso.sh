@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# === ecOS — Build ISO/USB image ===
+# === ecos — Build ISO/USB image ===
 # Utilise bootc-image-builder pour générer une image bootable
 
 IMAGE_NAME="ecos"
@@ -11,7 +11,7 @@ OUTPUT_DIR="./output"
 ARCH="$(uname -m)"
 
 echo "============================================"
-echo "  ecOS — Image Builder"
+echo "  ecos — Image Builder"
 echo "============================================"
 echo "Target: $REGISTRY"
 echo "Arch:   $ARCH"

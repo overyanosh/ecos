@@ -1,4 +1,4 @@
-name: Build ecOS Image
+name: Build ecos Image
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Login to GHCR
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io \
+          echo "${{ secrets.GHCR_TOKEN }}" | podman login ghcr.io \
             -u ${{ github.actor }} --password-stdin
 
       - name: Tag and Push image

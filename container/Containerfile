@@ -1,9 +1,9 @@
-# ---- ecOS bootc image ----
+# ---- ecos bootc image ----
 FROM quay.io/almalinuxorg/almalinux-bootc:9
 
-LABEL org.opencontainers.image.title="ecOS"
+LABEL org.opencontainers.image.title="ecos"
 LABEL org.opencontainers.image.description="Gaming-focused immutable virtualization host"
-LABEL org.opencontainers.image.source="https://github.com/overyanosh/ecOS"
+LABEL org.opencontainers.image.source="https://github.com/overyanosh/ecos"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 
 # ============================================================
@@ -113,14 +113,14 @@ COPY files/etc/sysctl.d/ecos-vm.conf /etc/sysctl.d/ecos-vm.conf
 RUN sysctl --system || true
 
 # ============================================================
-# 6. TUNED PROFILE — ecOS-gaming
+# 6. TUNED PROFILE — ecos-gaming
 # ============================================================
 
 COPY files/etc/tuned/ecos-gaming/tuned.conf \
      /etc/tuned/ecos-gaming/tuned.conf
 
 # ============================================================
-# 7. ECOS BINAIRES & SCRIPTS
+# 7. ecos BINAIRES & SCRIPTS
 # ============================================================
 
 COPY files/usr/local/bin/ecos-firstboot.sh /usr/local/bin/ecos-firstboot.sh

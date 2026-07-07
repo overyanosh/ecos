@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-# === ecOS Update Checker ===
+# === ecos Update Checker ===
 # Vérifie si une mise à jour bootc est disponible
 # Les updates sont pilotées par la distribution — ce script ne fait que CHECK
 # Il ne déclenche PAS l'update (contrairement à bootc upgrade)
 
-ECOS_STATE="/var/lib/ecos"
-UPDATE_FLAG="$ECOS_STATE/.update-available"
-LAST_CHECK="$ECOS_STATE/.last-update-check"
-mkdir -p "$ECOS_STATE"
+ecos_STATE="/var/lib/ecos"
+UPDATE_FLAG="$ecos_STATE/.update-available"
+LAST_CHECK="$ecos_STATE/.last-update-check"
+mkdir -p "$ecos_STATE"
 
 # --- Éviter de checker trop souvent (max 1x par heure) ---
 if [[ -f "$LAST_CHECK" ]]; then
@@ -47,10 +47,10 @@ if [[ -z "$CURRENT_IMAGE" || -z "$TARGET_IMAGE" ]]; then
     PENDING=$(echo "$OSTREE_STATUS" | grep -oP 'pending\s*\K[0-9a-f]{64}' | head -1)
     
     if [[ -n "$PENDING" && "$BOOTED" != "$PENDING" ]]; then
-        echo "[ecOS] Update available (ostree pending commit: ${PENDING:0:12})"
+        echo "[ecos] Update available (ostree pending commit: ${PENDING:0:12})"
         touch "$UPDATE_FLAG"
         echo "{\"update_available\": true, \"pending_commit\": \"${PENDING:0:12}\"}" \
-             > "$ECOS_STATE/update-info.json"
+             > "$ecos_STATE/update-info.json"
     else
         rm -f "$UPDATE_FLAG"
     fi
@@ -59,12 +59,12 @@ fi
 
 # --- bootc status comparison ---
 if [[ "$CURRENT_IMAGE" != "$TARGET_IMAGE" && -n "$TARGET_IMAGE" ]]; then
-    echo "[ecOS] Update available: $TARGET_IMAGE"
-    echo "[ecOS] Current image:   $CURRENT_IMAGE"
+    echo "[ecos] Update available: $TARGET_IMAGE"
+    echo "[ecos] Current image:   $CURRENT_IMAGE"
     touch "$UPDATE_FLAG"
     echo "{\"update_available\": true, \"current\": \"$CURRENT_IMAGE\", \"target\": \"$TARGET_IMAGE\"}" \
-         > "$ECOS_STATE/update-info.json"
+         > "$ecos_STATE/update-info.json"
 else
     rm -f "$UPDATE_FLAG" 2>/dev/null || true
-    echo "[ecOS] System is up to date."
+    echo "[ecos] System is up to date."
 fi
