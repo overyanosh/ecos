@@ -130,18 +130,18 @@ ssh ecos-admin@<ip-du-serveur>
 passwd  # change le mot de passe immédiatement
 
 📦 Stack technique
-    Composant               Technologie
-    OS de base	            AlmaLinux 9
-    Immutabilité	        bootc + ostree
-    Hyperviseur	            QEMU/KVM + libvirt
-    GPU                     Passthrough	VFIO (NVIDIA + AMD + INTEL)
-    Soft RAID	            mdadm
-    Stockage réseau	        iSCSI + device-mapper-multipath
-    Réseau	                NetworkManager
-    Accès distant	        OpenSSH
-    CI/CD	                GitHub Actions
-    Registry	            GHCR
-    Web UI (à venir)	    Go + Vue.js 3
+        Composant               Technologie
+        OS de base	            AlmaLinux 9
+        Immutabilité	        bootc + ostree
+        Hyperviseur	            QEMU/KVM + libvirt
+        GPU                     Passthrough	VFIO (NVIDIA + AMD + INTEL)
+        Soft RAID	            mdadm
+        Stockage réseau	        iSCSI + device-mapper-multipath
+        Réseau	                NetworkManager
+        Accès distant	        OpenSSH
+        CI/CD	                GitHub Actions
+        Registry	            GHCR
+        Web UI (à venir)	    Go + Vue.js 3
 
 📋 Prérequis matériels
 
