@@ -19,6 +19,38 @@
 | **Gaming-first**     | GPU passthrough, CPU pinning, hugepages, tuned gaming profile                           |
 
 ---
+📋 Prérequis matériels
+
+    CPU 64-bit avec support IOMMU (Intel VT-d ou AMD-Vi)
+    16GB RAM minimum (recommandé pour VM gaming)
+    1 ou plusieurs GPU discrets (NVIDIA,AMD ou intel)
+    1 clé USB (16GB+ recommandé)
+    Systeme UEFI boot capable uniquement
+
+📜 Licence
+
+GPL-3.0
+👤 Auteur
+
+overyanosh
+GitHub: @overyanosh
+
+🛠️ Stack technique
+
+    Composant           	Technologie
+    OS de base	            AlmaLinux 9
+    Immutabilité        	bootc + ostree
+    Hyperviseur	            QEMU/KVM + libvirt
+    GPU passthrough	VFIO    (NVIDIA,AMD,Intel)
+    Soft RAID	            mdadm
+    Stockage réseau	        iSCSI + device-mapper-multipath
+    Profils de performance	tuned (ecos-gaming custom)
+    Réseau	                NetworkManager (bridge br0)
+    Accès distant	        OpenSSH (clés uniquement)
+    CI/CD	                GitHub Actions
+    Registry	            GitHub Container Registry (GHCR)
+    Web UI (à venir)    	Go + Vue.js 3
+
 
 ## 🏗️ Architecture
         ┌─────────────────────────────────────────────┐
@@ -149,8 +181,8 @@ Phase 3 — Gestion des VM (à venir)
             ├── BOOTC-SETUP.md
             └── GPU-PASSTHROUGH.md
 
-🚀 Démarrage rapide
-Build via GitHub Actions
+# 🚀 Démarrage rapide
+## Build via GitHub Actions
 
 Le build est entièrement automatisé. Sur un push vers main :
 
@@ -158,12 +190,12 @@ Le build est entièrement automatisé. Sur un push vers main :
     bootc-image-builder génère une image disque disk.raw
     L'artifact est disponible en téléchargement depuis GitHub Actions
 
-Build local
+## Build local
 
-# 1. Build du container image
+### 1. Build du container image
 podman build -t ecos:latest -f container/Containerfile .
 
-# 2. Génération de l'image disque bootable
+### 2. Génération de l'image disque bootable
         sudo podman pull quay.io/centos-bootc/bootc-image-builder:latest
         sudo podman run --rm --privileged \
         -v /var/lib/containers/storage:/var/lib/containers/storage \
@@ -174,16 +206,16 @@ podman build -t ecos:latest -f container/Containerfile .
         --rootfs xfs \
         --verbose
 
-# Flash sur clé USB
+## Flash sur clé USB
 
-## Identifier la clé USB
+### Identifier la clé USB
 lsblk
 
-## Flasher
+### Flasher
         sudo dd if=output/disk.raw of=/dev/sdX bs=4M status=progress conv=fsync
         sync
 
-Premier boot
+### Premier boot
 
     Brancher la clé USB sur le serveur
     (Optionnel) Brancher une seconde clé USB avec un fichier ecos-ssh.pub contenant votre clé publique SSH
@@ -215,7 +247,7 @@ Le script ecos-prepare-gpu.sh :
     Blacklist les drivers natifs (nouveau, nvidia, amdgpu, radeon)
     Régénère l'initramfs
 
-🔄 Mises à jour
+# 🔄 Mises à jour
 
 Les mises à jour ecOS suivent le modèle bootc :
 
@@ -226,39 +258,7 @@ Les mises à jour ecOS suivent le modèle bootc :
 
 Les mises à jour ne peuvent pas être déclenchées manuellement par un utilisateur — elles sont pilotées par la distribution via le pipeline CI/CD.
 
-🛠️ Stack technique
-
-    Composant           	Technologie
-    OS de base	            AlmaLinux 9
-    Immutabilité        	bootc + ostree
-    Hyperviseur	            QEMU/KVM + libvirt
-    GPU passthrough	VFIO    (NVIDIA,AMD,Intel)
-    Soft RAID	            mdadm
-    Stockage réseau	        iSCSI + device-mapper-multipath
-    Profils de performance	tuned (ecos-gaming custom)
-    Réseau	                NetworkManager (bridge br0)
-    Accès distant	        OpenSSH (clés uniquement)
-    CI/CD	                GitHub Actions
-    Registry	            GitHub Container Registry (GHCR)
-    Web UI (à venir)    	Go + Vue.js 3
-
-
-📋 Prérequis matériels
-
-    CPU 64-bit avec support IOMMU (Intel VT-d ou AMD-Vi)
-    16GB RAM minimum (recommandé pour VM gaming)
-    1 ou plusieurs GPU discrets (NVIDIA,AMD ou intel)
-    1 clé USB (16GB+ recommandé)
-    Systeme UEFI boot capable uniquement
-
-📜 Licence
-
-GPL-3.0
-👤 Auteur
-
-overyanosh
-GitHub: @overyanosh
-🗺️ Roadmap
+# 🗺️ Roadmap
 
     Phase 1 — Système de base immuable bootable USB
     Phase 2 — Interface web Go + Vue.js
