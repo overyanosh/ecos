@@ -266,6 +266,6 @@ GitHub: @overyanosh
     Phase 4 — Contrôle LED/ventilos
     Phase 5 — CPU pinning UI, power profiles slider
 
-ecOS — Parce que d'autre ne le faisaient pas exactement !
+ecOS — Parce que d'autre ne le faisaient pas exactement ! 🐱
 =======
 
