@@ -97,57 +97,57 @@ Phase 3 — Gestion des VM (à venir)
 
 📁 Structure du projet
 
-ecos/
-├── README.md
-├── LICENSE                          # GPL-3.0
-├── .github/
-│   └── workflows/
-│       └── build-image.yml          # CI: build + push + disk image
-├── container/
-│   ├── Containerfile                # Image bootc principale
-│   └── files/
-│       ├── etc/
-│       │   ├── dracut.conf.d/
-│       │   │   └── vfio.conf        # Dracut: early VFIO modules
-│       │   ├── modprobe.d/
-│       │   │   ├── vfio.conf         # VFIO binding config
-│       │   │   └── blacklist.conf    # Blacklist drivers GPU natifs
-│       │   ├── ssh/
-│       │   │   └── sshd_config.d/
-│       │   │       └── ecos.conf     # SSH durci
-│       │   ├── iscsi/
-│       │   │   └── iscsid.conf       # iSCSI initiator config
-│       │   ├── sysctl.d/
-│       │   │   └── ecos-vm.conf      # Kernel tuning VM
-│       │   ├── tuned/
-│       │   │   └── ecos-gaming/
-│       │   │       └── tuned.conf    # Profil gaming
-│       │   ├── bootc/
-│       │   │   └── ecos-update-policy.conf
-│       │   └── systemd/
-│       │       └── system/
-│       │           ├── ecos-immutable.service
-│       │           ├── ecos-tmpfs-logs.service
-│       │           ├── ecos-power-profile.service
-│       │           └── ecos-firstboot.service
-│       └── usr/
-│           ├── local/
-│           │   └── bin/
-│           │       ├── ecos-firstboot.sh      # Setup initial auto
-│           │       ├── ecos-prepare-gpu.sh     # GPU scan + VFIO
-│           │       └── ecos-lock-writes.sh      # Write protection
-│           └── sbin/
-│               └── ecos-update-checker          # Check updates bootc
-├── scripts/
-│   ├── build-iso.sh                 # Build local
-│   └── flash-usb.sh                  # Flash clé USB
-├── web-ui/                           # Phase 2 (à venir)
-│   ├── backend/                      # Go API
-│   └── frontend/                     # Vue.js 3
-└── docs/
-    ├── ARCHITECTURE.md
-    ├── BOOTC-SETUP.md
-    └── GPU-PASSTHROUGH.md
+        ecos/
+        ├── README.md
+        ├── LICENSE                          # GPL-3.0
+        ├── .github/
+        │   └── workflows/
+        │       └── build-image.yml          # CI: build + push + disk image
+        ├── container/
+        │   ├── Containerfile                # Image bootc principale
+        │   └── files/
+        │       ├── etc/
+        │       │   ├── dracut.conf.d/
+        │       │   │   └── vfio.conf        # Dracut: early VFIO modules
+        │       │   ├── modprobe.d/
+        │       │   │   ├── vfio.conf         # VFIO binding config
+        │       │   │   └── blacklist.conf    # Blacklist drivers GPU natifs
+        │       │   ├── ssh/
+        │       │   │   └── sshd_config.d/
+        │       │   │       └── ecos.conf     # SSH durci
+        │       │   ├── iscsi/
+        │       │   │   └── iscsid.conf       # iSCSI initiator config
+        │       │   ├── sysctl.d/
+        │       │   │   └── ecos-vm.conf      # Kernel tuning VM
+        │       │   ├── tuned/
+        │       │   │   └── ecos-gaming/
+        │       │   │       └── tuned.conf    # Profil gaming
+        │       │   ├── bootc/
+        │       │   │   └── ecos-update-policy.conf
+        │       │   └── systemd/
+        │       │       └── system/
+        │       │           ├── ecos-immutable.service
+        │       │           ├── ecos-tmpfs-logs.service
+        │       │           ├── ecos-power-profile.service
+        │       │           └── ecos-firstboot.service
+        │       └── usr/
+        │           ├── local/
+        │           │   └── bin/
+        │           │       ├── ecos-firstboot.sh      # Setup initial auto
+        │           │       ├── ecos-prepare-gpu.sh     # GPU scan + VFIO
+        │           │       └── ecos-lock-writes.sh      # Write protection
+        │           └── sbin/
+        │               └── ecos-update-checker          # Check updates bootc
+        ├── scripts/
+        │   ├── build-iso.sh                 # Build local
+        │   └── flash-usb.sh                  # Flash clé USB
+        ├── web-ui/                           # Phase 2 (à venir)
+        │   ├── backend/                      # Go API
+        │   └── frontend/                     # Vue.js 3
+        └── docs/
+            ├── ARCHITECTURE.md
+            ├── BOOTC-SETUP.md
+            └── GPU-PASSTHROUGH.md
 
 🚀 Démarrage rapide
 Build via GitHub Actions
