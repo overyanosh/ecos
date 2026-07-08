@@ -49,9 +49,10 @@ fi
 touch "$ecos_STATE/.firstboot-done"
 echo "[ecos] First boot configuration complete!"
 
-# --- 5. Reboot pour appliquer les kargs ---
-echo "[ecos] Rebooting in 5 seconds to apply kernel parameters..."
-sleep 5
+# --- 5. Configurer le splash screen GRUB ---
+echo "[ecOS] Setting up boot splash screen..."
+/usr/local/bin/ecos-grub-setup.sh || echo "[ecOS] GRUB setup skipped (no splash image)"
+
 
 # --- 6. Créer l'utilisateur admin ---
 echo "[ecOS] Creating admin user..."
@@ -93,6 +94,10 @@ chown -R "$ADMIN_USER:$ADMIN_USER" "/home/$ADMIN_USER/.ssh"
 sed -i "s/^#AllowUsers.*/AllowUsers $ADMIN_USER/" /etc/ssh/sshd_config.d/ecos.conf
 
 echo "[ecOS] Admin user '$ADMIN_USER' created."
+sleep 5
+
+# --- 7. Reboot pour appliquer les kargs ---
+echo "[ecos] Rebooting in 5 seconds to apply kernel parameters..."
 sleep 5
 
 reboot

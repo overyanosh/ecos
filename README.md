@@ -130,6 +130,7 @@ ssh ecos-admin@<ip-du-serveur>
 passwd  # change le mot de passe immédiatement
 
 📦 Stack technique
+
         Composant               Technologie
         OS de base	            AlmaLinux 9
         Immutabilité	        bootc + ostree
